@@ -1,0 +1,70 @@
+import React, { useReducer, useEffect } from 'react'
+
+export default props => {
+  const initialState = {
+    date: 0,
+    startTime: 0,
+    elapsedTime: 0,
+    initialTime: 0,
+    inactive: true,
+    textContent: '00:00'
+  }
+  const [state, dispatch] = useReducer(
+    (state, action) => {
+      switch (action.type) {
+        case 'START':
+          return {
+            ...state,
+            startTime: Date.now() - state.elapsedTime,
+            inactive: false
+          }
+        case 'STOP':
+          return {
+            ...state,
+            elapsedTime: state.date,
+            inactive: true
+          }
+        case 'RESET':
+          return initialState
+        case 'PROGRESS':
+          const date = Date.now() - state.startTime
+          if (date<0) return initialState
+          const d = new Date(date)
+          const m = String(d.getMinutes()).padStart(2, '0')
+          const s = String(d.getSeconds()).padStart(2, '0')
+          return {
+            ...state,
+            date,
+            textContent: `${m}:${s}`
+          }
+        default:
+          return state
+    }}, initialState
+  )
+  useEffect(() => {
+    if (!state.inactive) {
+      setTimeout(() => dispatch({ type: 'PROGRESS' }, 1000))
+    }
+  })
+
+  return <React.Fragment>
+    <div>{state.textContent}</div>
+    { state.inactive
+      ?  <button
+           onClick={ () => dispatch({ type: 'START' }) }
+         >
+           Start
+         </button>
+      :  <button
+           onClick={ () => dispatch({ type: 'STOP' }) }
+         >
+           Stop
+         </button>
+    }
+    
+    <button
+      onClick={ () => dispatch({ type: 'RESET' }) }
+      disabled={ state.inactive ? false : true }
+    >Reset</button>
+  </React.Fragment>
+}

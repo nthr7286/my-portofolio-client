@@ -1,0 +1,114 @@
+import React, { useReducer, useEffect } from 'react'
+import PlayArrowIcon from '@material-ui/icons/PlayArrow'
+import PauseIcon from '@material-ui/icons/Pause'
+
+export default props => {
+  const initialState = {
+    date: 0,
+    startTime: 0,
+    elapsedTime: 0,
+    initialTime: 0,
+    inactive: true,
+    textContent: '00:00'
+  }
+  const [state, dispatch] = useReducer(
+    (state, action) => {
+      const getTime = d => [
+          String(d.getMinutes()).padStart(2, '0'),
+          String(d.getSeconds()).padStart(2, '0') 
+      ]
+      let m, s, initialTime
+      switch (action.type) {
+        case 'START':
+          return {
+            ...state,
+            startTime: Date.now(),
+            inactive: false
+          }
+        case 'PAUSE':
+          return {
+            ...state,
+            elapsedTime: Date.now() - state.startTime,
+            inactive: true
+          }
+        case 'RESET':
+          return initialState
+
+        case 'INCREMENT10MIN':
+          initialTime = state.initialTime + 10*60*1000
+          ;[m, s] = getTime(new Date(initialTime))
+          return {
+            ...state,
+            initialTime,
+            textContent: `${m}:${s}`
+          }
+        case 'INCREMENT1MIN':
+          initialTime = state.initialTime + 1*60*1000
+          ;[m, s] = getTime(new Date(initialTime))
+          return {
+            ...state,
+            initialTime,
+            textContent: `${m}:${s}`
+          }
+        case 'INCREMENT10SEC':
+          initialTime = state.initialTime + 10*1000
+          ;[m, s] = getTime(new Date(initialTime))
+          return {
+            ...state,
+            initialTime,
+            textContent: `${m}:${s}`
+          }
+
+        case 'PROGRESS':
+          const date = state.initialTime 
+            - ( Date.now() - state.startTime + state.elapsedTime )
+          if (date<0) return initialState
+          ;[m, s] = getTime(new Date(date))
+          return {
+            ...state,
+            date,
+            textContent: `${m}:${s}`
+          }
+        default:
+          return state
+    }}, initialState
+  )
+  useEffect(() => {
+    if (!state.inactive) {
+      setTimeout(() => dispatch({ type: 'PROGRESS' }, 1000))
+    }
+  })
+
+  return <React.Fragment>
+    <div>{state.textContent}</div>
+    { state.inactive
+      ?  <button
+           onClick={ () => dispatch({ type: 'START' }) }
+         >
+           <PlayArrowIcon />
+         </button>
+      :  <button
+           onClick={ () => dispatch({ type: 'PAUSE' }) }
+         >
+           <PauseIcon />
+         </button>
+    }
+    
+    <button
+      onClick={ () => dispatch({ type: 'RESET' }) }
+      disabled={ state.inactive ? false : true }
+    >Reset</button>
+    <button
+      onClick={ () => dispatch({ type: 'INCREMENT10MIN' }) }
+      disabled={ state.inactive ? false : true }
+    >10Min</button>
+    <button
+      onClick={ () => dispatch({ type: 'INCREMENT1MIN' }) }
+      disabled={ state.inactive ? false : true }
+    >1Min</button>
+    <button
+      onClick={ () => dispatch({ type: 'INCREMENT10SEC' }) }
+      disabled={ state.inactive ? false : true }
+    >10Sec</button>
+  </React.Fragment>
+}
