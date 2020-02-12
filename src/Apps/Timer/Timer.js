@@ -15,11 +15,12 @@ const useStyles = makeStyles(theme => ({
     padding: theme.spacing(1)
   },
   card: {
+    minWidth: 300,
     maxWidth: 400,
-    margin: '0 auto',
   },
   controls: {
     display: 'flex',
+    alignItems: 'center',
     justifyContent: 'center'
   }
 }))
@@ -99,12 +100,12 @@ export default props => {
   const [state, dispatch] = useReducer(reducer, initialState)
 
   useEffect(() => {
+    if (!state.inactive) {
       let timeoutId = setTimeout(() => {
-        if (!state.inactive) {
           dispatch({ type: 'PROGRESS' })
-        }
-      }, 300)
+      }, 30)
       return () => clearTimeout(timeoutId)
+    }
   })
 
   return <div className={classes.root}>
